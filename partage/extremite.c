@@ -17,21 +17,7 @@
 #include "extremite.h"
 #include "iftun.h"
 
-void sendToTun(int tun, int s) {
-  char buffer[1500];
-  int nbrChar = recv(s, buffer, 1500, 0);
-  fprintf(stderr, "%s",buffer);
-
-  if(nbrChar < 0) {
-    perror("read");
-    return;
-  }
-  if(write (tun, buffer, nbrChar) < 0){
-    perror("write");
-    return;
-  }
-
-}
+void sendToTun(int tun, int s);
 
 int ext_out(int tun){
 	
@@ -105,7 +91,6 @@ int ext_out(int tun){
   }
   
   while(1){
-
 	  sendToTun(tun, n);
   }
   return EXIT_SUCCESS;
@@ -146,4 +131,19 @@ int ext_in(char* ipServ, char* port, int tun)
 
   fprintf(stderr,"Fin de la session.\n");
   return EXIT_SUCCESS;
+}
+
+void sendToTun(int tun, int s) {
+  char buffer[1500];
+  int nbrChar = recv(s, buffer, 1500, 0);
+  fprintf(stderr, "%s",buffer);
+
+  if(nbrChar < 0) {
+    perror("read");
+    return;
+  }
+  if(write (tun, buffer, nbrChar) < 0){
+    perror("write");
+    return;
+  }
 }
