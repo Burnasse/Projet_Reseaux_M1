@@ -10,7 +10,7 @@
 #include <linux/if.h>
 #include <linux/if_tun.h>
 
-#include "tunalloc.h"
+#include "iftun.h"
 
 int tun_alloc(char *dev)
 {
@@ -41,7 +41,7 @@ int tun_alloc(char *dev)
   return fd;
 }
 
-int writeTun(int src, int dst) {
+void writeTun(int src, int dst) {
   char buffer[1500];
   int nBytes;
  
@@ -49,26 +49,9 @@ int writeTun(int src, int dst) {
 
   if(nBytes < 0) {
     perror("Error during reading");
-    return -1;
+    return;
   }
 
   write(dst, buffer, nBytes);
 
-  return 0;
 }
-/*
-int main (int argc, char** argv){
-
-  int tunfd;
-  printf("Création de %s\n",argv[1]);
-  tunfd = tun_alloc(argv[1]);
-  printf("Faire la configuration de %s...\n",argv[1]);
-  printf("Appuyez sur une touche pour continuer\n");
-  getchar();
-  printf("Interface %s Configurée:\n",argv[1]);
-  system("ip addr");
-  printf("Appuyez sur une touche pour terminer\n");
-  getchar();
-
-  return 0;
-}*/

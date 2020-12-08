@@ -6,18 +6,31 @@
 #include <string.h>
 #include <netdb.h>
 
-#include "extremite.h"
-#include "tunalloc.h"
+#include <sys/stat.h>
+#include <sys/ioctl.h>
 
-void sendToTun(int s, int tun){
-	char buffer[1500];
-	int lenMsg = recv(s, buffer, 1500, 0);
-	if(lenMsg < 0) {
-		perror("read");
-	}
-	if(write (tun, buffer, lenMsg) < 0){
-		perror("write");
-	}
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/if.h>
+#include <linux/if_tun.h>
+
+#include "extremite.h"
+#include "iftun.h"
+
+void sendToTun(int tun, int s) {
+  char buffer[1500];
+  int nbrChar = recv(s, buffer, 1500, 0);
+  fprintf(stderr, "%s",buffer);
+
+  if(nbrChar < 0) {
+    perror("read");
+    return;
+  }
+  if(write (tun, buffer, nbrChar) < 0){
+    perror("write");
+    return;
+  }
+
 }
 
 int ext_out(int tun){
@@ -76,16 +89,24 @@ int ext_out(int tun){
       perror("accept");
       exit(7);
     }
-    /* Nom réseau du client */
-    char hotec[NI_MAXHOST];  char portc[NI_MAXSERV];
-    err = getnameinfo((struct sockaddr*)&client,len,hotec,NI_MAXHOST,portc,NI_MAXSERV,0);
-    if (err < 0 ){
-      fprintf(stderr,"résolution client (%i): %s\n",n,gai_strerror(err));
-    }else{ 
-      fprintf(stderr,"accept! (%i) ip=%s port=%s\n",n,hotec,portc);
-    }
-	
-	sendToTun(n, tun);
+	if(n > 0){
+		
+		/* Nom réseau du client */
+		char hotec[NI_MAXHOST];  char portc[NI_MAXSERV];
+		err = getnameinfo((struct sockaddr*)&client,len,hotec,NI_MAXHOST,portc,NI_MAXSERV,0);
+		if (err < 0 ){
+		  fprintf(stderr,"résolution client (%i): %s\n",n,gai_strerror(err));
+		}else{ 
+		  fprintf(stderr,"accept! (%i) ip=%s port=%s\n",n,hotec,portc);
+		}
+		break;
+	}
+
+  }
+  
+  while(1){
+
+	  sendToTun(tun, n);
   }
   return EXIT_SUCCESS;
 }
@@ -108,16 +129,14 @@ int ext_in(char* ipServ, char* port, int tun)
 	s = socket(resol->ai_family, resol->ai_socktype, resol->ai_protocol);
   /* Création de la socket, de type TCP / IP */
   /* On ne considère que la première adresse renvoyée par getaddrinfo */
-  printf("Essai de connexion à %s /// ip = %s sur le port %s \n", ipServ, ip, port);
-  int c = connect(s, resol->ai_addr, sizeof(struct sockaddr_in));
-	while( c < 0) {
-		sleep(2);
-		printf("Essai de connexion à %s /// ip = %s sur le port %s \n", ipServ, ip, port);
-		c = connect(s, resol->ai_addr, sizeof(struct sockaddr_in));
-	}
-  fprintf(stderr,"le n° de la socket est : %i\n",s);
-
+  fprintf(stderr,"Essai de connexion à %s (%s) sur le port %s\n\n",
+	  ipServ,ip,port);
+  if (connect(s,resol->ai_addr,sizeof(struct sockaddr_in))<0) {
+    perror("connection");
+    exit(4);
+  }
   freeaddrinfo(resol); /* /!\ Libération mémoire */
+  fprintf(stderr,"le n° de la socket est : %i\n",s);
 
   while( 1 ) {
     writeTun(tun, s);

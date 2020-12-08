@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tunalloc.h"
+#include "iftun.h"
 
 int main (int argc, char** argv){
   char tunName[100];

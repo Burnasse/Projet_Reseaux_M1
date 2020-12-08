@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tunalloc.h"
+#include "iftun.h"
 #include "extremite.h"
 
 int main (int argc, char **argv){
